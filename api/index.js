@@ -62,6 +62,19 @@ const app = createApp({
 /* A rewrite can hand the function the rewritten path, so put the real request
    path back before Express matches routes like /r/eric or /api/shop. */
 module.exports = function handler(req, res) {
+  /* a missing DATABASE_URL is a deployment problem, so say exactly that
+     instead of letting the admin see a vague "server error" */
+  const url = String(req.url || "").split("?")[0];
+  if (!process.env.DATABASE_URL && url.indexOf("/api/") === 0 && url !== "/api/health") {
+    res.statusCode = 503;
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store");
+    res.end(JSON.stringify({
+      error: "The shop is missing its DATABASE_URL environment variable. Add it in Vercel under Settings → Environment Variables, then redeploy.",
+    }));
+    return;
+  }
+
   const forwarded = req.headers["x-forwarded-path"] || req.headers["x-original-url"] || "";
   if (forwarded && req.url.indexOf(forwarded) !== 0) {
     const query = (req.url.split("?")[1] || "");
