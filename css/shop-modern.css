@@ -1369,3 +1369,104 @@ footer .information_f a:hover {
         margin-right: 0;
     }
 }
+
+/* ============================================================
+   More dropdown - the template rule li.nav-item ul gave it a 2px
+   black border, a hard offset shadow and a fixed 190px width, and its
+   links stayed inline, so two entries sat on one cramped line.
+   Desktop keeps the boxed look; phones get a clean in-flow list.
+   ============================================================ */
+.custom_nav-container .navbar-nav li.nav-item ul li {
+    list-style: none;
+}
+
+.custom_nav-container .navbar-nav li.nav-item ul li a {
+    display: block;
+    padding: 7px 2px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #131313;
+    text-align: left;
+    border-radius: 0;
+    transition: color .2s ease;
+}
+
+.custom_nav-container .navbar-nav li.nav-item ul li a:hover {
+    color: #f7444e;
+}
+
+@media (max-width: 991px) {
+    .custom_nav-container .navbar-nav li.nav-item ul {
+        position: static;
+        width: auto;
+        min-width: 0;
+        margin: 0;
+        padding: 0 14px 4px;
+        background: transparent;
+        border: 0;
+        box-shadow: none;
+        display: none;
+    }
+
+    .custom_nav-container .navbar-nav li.nav-item ul.show {
+        display: block;
+        animation: moreDrop .16s ease-out both;
+    }
+
+    .custom_nav-container .navbar-nav li.nav-item ul li a {
+        padding: 10px 2px;
+        min-height: 40px;
+        text-transform: uppercase;
+        letter-spacing: .2px;
+        border-bottom: 1px solid #ececec;
+    }
+
+    .custom_nav-container .navbar-nav li.nav-item ul li:last-child a {
+        border-bottom: 0;
+    }
+
+    .custom_nav-container .dropdown-toggle .caret {
+        transition: transform .2s ease;
+    }
+
+    .custom_nav-container .dropdown-toggle[aria-expanded="true"] .caret {
+        transform: rotate(180deg);
+    }
+}
+
+@keyframes moreDrop {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .custom_nav-container .navbar-nav li.nav-item ul.show {
+        animation: none;
+    }
+
+    .custom_nav-container .dropdown-toggle .caret {
+        transition: none;
+    }
+}
+
+/* The template floats the dropdown entries (li.nav-item ul li { float: left }),
+   which collapses the list box to a few pixels so the links painted over the
+   cart row below it. They are block rows now, and the desktop box is kept
+   inside the viewport instead of hanging off the right edge. */
+.custom_nav-container .navbar-nav li.nav-item ul li {
+    float: none;
+}
+
+@media (min-width: 992px) {
+    .custom_nav-container .navbar-nav li.nav-item ul {
+        left: auto;
+        right: 0;
+        max-width: 240px;
+    }
+}
