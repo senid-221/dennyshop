@@ -150,7 +150,7 @@ test("referral codes attach to orders and commission is computed on goods only",
   const me = await request(app).get("/api/affiliate/me").set("Cookie", eric);
   assert.equal(me.status, 200);
   assert.equal(me.body.code, "eric");
-  assert.equal(me.body.link, "https://shop.test/?ref=eric");
+  assert.equal(me.body.link, "https://shop.test/r/eric");
   assert.equal(me.body.orders.length, 1);
   // a brand new order is not payable yet
   assert.equal(me.body.earned_goods_value, 0);
@@ -346,6 +346,55 @@ test("affiliate and staff accounts are created through the dashboard endpoints",
   const staffCookie = await login(app, "newstaff@test.rw", "staffpass2");
   const denied = await request(app).post("/api/admin/users").set("Cookie", staffCookie).send({ email: "z@test.rw", name: "Z", password: "abcdefgh", role: "staff" });
   assert.equal(denied.status, 403);
+});
+
+test("routes: health, short links, clean pages, guarded paths and 404s", async function () {
+  const db = makeDb();
+  await seedCatalog(db);
+  await S.upsertSettings({ query: db.query });
+  await db.query("INSERT INTO affiliates (code,name,commission_pct) VALUES ('eric','Eric',12)");
+  const app = createApp({
+    db: db,
+    cfg: { staticDir: path.join(__dirname, "..", ".."), secureCookies: false, siteUrl: "https://shop.test" },
+  });
+
+  const health = await request(app).get("/api/health");
+  assert.equal(health.status, 200);
+  assert.equal(health.body.ok, true);
+
+  const short = await request(app).get("/r/eric");
+  assert.equal(short.status, 302);
+  assert.equal(short.headers.location, "/?ref=eric");
+  const clicks = await db.query("SELECT code FROM referral_clicks");
+  assert.equal(clicks.length, 1);
+  assert.equal(clicks[0].code, "eric");
+
+  const ghost = await request(app).get("/r/ghost");
+  assert.equal(ghost.status, 404);
+  assert.match(ghost.text, /no longer active/);
+
+  const page = await request(app).get("/products");
+  assert.equal(page.status, 200);
+  assert.match(page.headers["content-type"], /html/);
+  assert.match(page.text, /product_grid/);
+
+  const root = await request(app).get("/");
+  assert.equal(root.status, 200);
+  assert.match(root.text, /Denny Shop/);
+
+  assert.equal((await request(app).get("/server/app.js")).status, 404);
+  assert.equal((await request(app).get("/server/schema.sql")).status, 404);
+
+  const apiMiss = await request(app).get("/api/does-not-exist");
+  assert.equal(apiMiss.status, 404);
+  assert.equal(apiMiss.body.error, "No such endpoint");
+
+  const page404 = await request(app).get("/nothing-here");
+  assert.equal(page404.status, 404);
+  assert.match(page404.text, /Back to the shop/);
+
+  const aff = await request(app).get("/api/admin/affiliates");
+  assert.equal(aff.status, 401);
 });
 
 test("reels are editable through the dashboard", async function () {

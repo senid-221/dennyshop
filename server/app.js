@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const S = require("./shop");
 const A = require("./auth");
+const R = require("./routes");
 
 function bad(res, msg, status) { return res.status(status || 400).json({ error: msg }); }
 
@@ -26,6 +27,7 @@ function createApp(opts) {
   app.disable("x-powered-by");
   app.use(express.json({ limit: "100kb" }));
   app.use(A.attachUser(db));
+  R.applyGuard(app);
 
   /* ---------------- auth ---------------- */
   app.post("/api/auth/login", wrap(async function (req, res) {
@@ -293,6 +295,9 @@ function createApp(opts) {
 
   app.get("/api/admin/affiliates", staff, wrap(async function (req, res) {
     const rows = await db.query("SELECT * FROM affiliates ORDER BY id");
+    const clicks = await db.query("SELECT code AS code, COUNT(*) AS n FROM referral_clicks GROUP BY code");
+    const clickByCode = {};
+    clicks.forEach(function (c) { clickByCode[String(c.code).toLowerCase()] = Number(c.n); });
     const stats = await db.query(
       "SELECT affiliate_code AS code, COUNT(*) AS orders, SUM(total) AS revenue, " +
       "SUM(CASE WHEN status IN ('confirmed','delivered') THEN subtotal ELSE 0 END) AS earned_base " +
@@ -307,6 +312,7 @@ function createApp(opts) {
         return Object.assign({}, a, {
           commission_pct: Number(a.commission_pct),
           order_count: Number(s.orders),
+          clicks: clickByCode[String(a.code).toLowerCase()] || 0,
           revenue: Number(s.revenue || 0),
           earned: earned,
         });
@@ -451,7 +457,7 @@ function createApp(opts) {
     const base = Number(sums[0].earned_base || 0);
     res.json({
       code: a.code, name: a.name, commission_pct: Number(a.commission_pct),
-      link: cfg.siteUrl + "/?ref=" + a.code,
+      link: cfg.siteUrl + "/r/" + a.code,
       order_count: orders.length,
       referred_orders: Number(sums[0].all_orders || 0),
       earned_goods_value: base,
@@ -460,9 +466,13 @@ function createApp(opts) {
     });
   }));
 
+  /* ---------------- clean page routes ---------------- */
+  R.applyRoutes(app, { db: db, cfg: cfg });
+
   /* ---------------- static site and admin UI ---------------- */
   app.use("/admin", express.static(path.join(__dirname, "..", "admin")));
-  if (cfg.staticDir) app.use(express.static(cfg.staticDir, { extensions: ["html"] }));
+  if (cfg.staticDir) app.use(express.static(cfg.staticDir, { index: ["index.html"], extensions: ["html"] }));
+  R.applyFallback(app);
 
   return app;
 }

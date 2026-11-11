@@ -404,7 +404,7 @@
           ' <span class="chip">?ref=' + esc(a.code) + "</span>" +
           (!a.active ? ' <span class="pill off">paused</span>' : "") + "</div>" +
           '<div class="meta">' + esc(a.phone || "no phone") + " &middot; " + Number(a.commission_pct) + "% of goods</div>" +
-          '<div class="chips"><span class="chip">' + a.order_count + " orders</span><span class=\"chip\">revenue " + money(a.revenue) + "</span>" +
+          '<div class="chips"><span class="chip">' + a.clicks + " clicks</span><span class=\"chip\">" + a.order_count + " orders</span><span class=\"chip\">revenue " + money(a.revenue) + "</span>" +
           '<span class="chip">earned ' + money(a.earned) + "</span></div></div>" +
           '<div class="side">' +
           '<button type="button" class="btn sm ghost js-copy" data-code="' + esc(a.code) + '">Copy link</button>' +
@@ -412,7 +412,7 @@
           "</div></div>";
       }).join("");
       $all(".js-copy", host).forEach(function (b) {
-        b.addEventListener("click", function () { copy(location.origin + "/?ref=" + b.dataset.code); });
+        b.addEventListener("click", function () { copy(location.origin + "/r/" + b.dataset.code); });
       });
       $all(".js-edit", host).forEach(function (b) {
         b.addEventListener("click", function () {
