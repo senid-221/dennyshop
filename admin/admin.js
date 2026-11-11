@@ -231,7 +231,7 @@
         b.addEventListener("click", function () {
           var p = findProduct(Number(b.dataset.id));
           api("/api/admin/products/" + p.id, { method: "PATCH", body: { active: !p.active } })
-            .then(function () { toast(p.active ? "Hidden from the shop" : "Back on the shop"); return loadProducts(); })
+            .then(function () { toast(p.active ? "Hidden from the shop" : "Now visible in the shop"); return loadProducts(); })
             .catch(function (e) { toast(e.message, true); });
         });
       });
