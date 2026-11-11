@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Denny Shop - Dashboard</title>
+  <link rel="shortcut icon" href="../images/favicon.png">
+  <link rel="stylesheet" href="../css/font-awesome.min.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <div id="login_view" class="login_wrap">
+    <form class="login_card" id="login_form" novalidate>
+      <h1>Denny Shop <span>dashboard</span></h1>
+      <p class="sub">Sign in to manage products, orders, reels and advertiser links.</p>
+      <label for="login_email">Email</label>
+      <input id="login_email" type="email" autocomplete="username" inputmode="email" required>
+      <label for="login_password">Password</label>
+      <input id="login_password" type="password" autocomplete="current-password" required>
+      <p class="err" id="login_error"></p>
+      <button type="submit" class="btn">Sign in</button>
+      <p class="hint">No account? Ask the shop owner to add you under Team.</p>
+    </form>
+  </div>
+
+  <div id="app_view" hidden>
+    <header class="topbar">
+      <div class="brand"><img src="../images/logo.png" alt="Denny Shop"></div>
+      <div class="who">
+        <span id="who_name"></span>
+        <em id="who_role"></em>
+        <button type="button" class="btn ghost sm" id="logout_btn">Sign out</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs" aria-label="Dashboard sections"></nav>
+
+    <main class="panel_wrap">
+      <section class="panel" id="panel_orders" hidden>
+        <div class="filters">
+          <select id="orders_status" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="new">New</option>
+            <option value="paid">Paid claimed</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <input id="orders_q" type="search" placeholder="Name, phone or order code" aria-label="Search orders">
+          <input id="orders_affiliate" type="search" placeholder="Advertiser code" aria-label="Filter by advertiser code">
+          <button type="button" class="btn sm" id="orders_refresh">Refresh</button>
+        </div>
+        <p class="count" id="orders_count"></p>
+        <div id="orders_list" class="rows"></div>
+      </section>
+
+      <section class="panel" id="panel_products" hidden>
+        <div class="filters">
+          <input id="products_q" type="search" placeholder="Search products" aria-label="Search products">
+          <button type="button" class="btn sm" id="product_new_btn">New product</button>
+        </div>
+        <div id="products_list" class="rows"></div>
+      </section>
+
+      <section class="panel" id="panel_reels" hidden>
+        <div class="filters"><button type="button" class="btn sm" id="reel_new_btn">Add reel</button></div>
+        <div id="reels_list" class="rows"></div>
+      </section>
+
+      <section class="panel" id="panel_affiliates" hidden>
+        <div class="filters"><button type="button" class="btn sm" id="aff_new_btn">New advertiser</button></div>
+        <div id="affiliates_list" class="rows"></div>
+      </section>
+
+      <section class="panel" id="panel_team" hidden>
+        <div class="filters"><button type="button" class="btn sm" id="user_new_btn">Add account</button></div>
+        <div id="team_list" class="rows"></div>
+      </section>
+
+      <section class="panel" id="panel_settings" hidden>
+        <div id="settings_host"></div>
+      </section>
+
+      <section class="panel" id="panel_me" hidden>
+        <div id="me_view"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal_backdrop" id="modal_backdrop" hidden></div>
+  <div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="Editor">
+    <button type="button" class="modal_x" id="modal_x" aria-label="Close">&times;</button>
+    <div id="modal_body"></div>
+  </div>
+
+  <p class="toast" id="toast" hidden></p>
+
+  <script src="admin.js"></script>
+</body>
+</html>

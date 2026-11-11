@@ -4,6 +4,12 @@
    scripts can read it.
    ============================================================ */
 
+/* Set this to your dashboard host (e.g. "https://denny.onrender.com") to run the
+   shop from the database: products, colours, reels, prices and orders then come
+   from the admin dashboard instead of this file. Leave it empty to stay fully
+   static - the shop keeps working from the lists below. */
+var API_BASE = "";
+
 var SHOP = {
     name: "Denny Shop",
     tagline: "Quality fashion delivered in Rwanda",

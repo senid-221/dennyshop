@@ -34,8 +34,9 @@ function all(sel, root) {
 }
 
 function getProduct(id) {
+    /* card data-id is always a string, while database ids are numbers */
     for (var i = 0; i < PRODUCTS.length; i++) {
-        if (PRODUCTS[i].id === id) return PRODUCTS[i];
+        if (String(PRODUCTS[i].id) === String(id)) return PRODUCTS[i];
     }
     return null;
 }
@@ -702,6 +703,7 @@ function buildWaText(o) {
     L.push("Paid to: " + MOMO.merchantNumber + " (" + MOMO.merchantName + ")");
     L.push(MOMO.refLabel + ": " + o.ref);
     L.push("Proof: " + (/attach|screenshot|receipt/i.test(o.notes) ? "receipt screenshot attached in this chat" : "MoMo reference above, screenshot to follow"));
+    if (o.affiliate) L.push("Advertiser code: " + o.affiliate);
     if (o.notes) { L.push(""); L.push("*NOTE:* " + o.notes); }
     L.push("");
     L.push("Please confirm my order. Thank you.");
@@ -718,24 +720,74 @@ function submitOrder(order, subtotal) {
     }
     var zone = document.getElementById("ck_zone").value;
     var fee = deliveryFeeFor(zone, subtotal);
-    var o = {
-        code: orderCode(),
-        dateStr: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
-        items: order,
-        subtotal: subtotal,
-        zone: zone,
-        fee: fee,
-        total: subtotal + fee,
+    var payload = {
         name: v.name,
         phone: v.phone,
         email: document.getElementById("ck_email").value.trim(),
-        district: document.getElementById("ck_district").value.trim() || (sharedLocation ? "Shared by GPS" : ""),
+        district: document.getElementById("ck_district").value.trim(),
         sector: document.getElementById("ck_sector").value.trim(),
         landmark: document.getElementById("ck_landmark").value.trim(),
         mapUrl: sharedLocation ? mapsUrl(sharedLocation.lat, sharedLocation.lng) : "",
+        zone: zone,
+        momoRef: v.ref,
+        paid: true,
+        notes: document.getElementById("ck_notes").value.trim(),
+        affiliateCode: refCode(),
+        items: order.map(function (it) { return { id: it.id, size: it.size, color: it.color, qty: it.qty }; }),
+    };
+
+    if (!API_ON) {
+        finalise(order, subtotal, fee, zone, payload, orderCode(), subtotal + fee, null);
+        return;
+    }
+    var btn = document.getElementById("ck_submit");
+    if (btn) btn.disabled = true;
+    apiPost("/api/orders", payload).then(function (res) {
+        if (btn) btn.disabled = false;
+        finalise(order, res.subtotal, res.delivery_fee, zone, payload, res.code, res.total, res.lines);
+    }).catch(function (e) {
+        if (btn) btn.disabled = false;
+        if (e.status === 422 || e.status === 400) { showServerErrors(e); return; }
+        // the shop must never stall because the server is unreachable
+        flash("Saved offline - sending the order on WhatsApp");
+        finalise(order, subtotal, fee, zone, payload, orderCode(), subtotal + fee, null);
+    });
+}
+
+function showServerErrors(e) {
+    var slot = document.getElementById("e_submit");
+    if (!slot) {
+        slot = el('<p class="field_error show" id="e_submit"></p>');
+        var btn = document.getElementById("ck_submit");
+        if (btn && btn.parentNode) btn.parentNode.insertBefore(slot, btn);
+    }
+    slot.textContent = e.message;
+    slot.scrollIntoView({ behavior: "smooth", block: "center" });
+    flash("The shop rejected this order");
+}
+
+function finalise(order, subtotal, fee, zone, payload, code, total, serverLines) {
+    var o = {
+        code: code,
+        dateStr: new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+        items: serverLines && serverLines.length ? serverLines.map(function (l) {
+            return { name: l.product_name, size: l.size, color: l.color, qty: l.qty, price: l.unit_price };
+        }) : order,
+        subtotal: subtotal,
+        zone: zone,
+        fee: fee,
+        total: total,
+        name: payload.name,
+        phone: payload.phone,
+        email: payload.email,
+        district: payload.district || (sharedLocation ? "Shared by GPS" : ""),
+        sector: payload.sector,
+        landmark: payload.landmark,
+        mapUrl: payload.mapUrl,
         acc: sharedLocation ? sharedLocation.acc : 0,
-        ref: v.ref,
-        notes: document.getElementById("ck_notes").value.trim()
+        ref: payload.momoRef,
+        notes: payload.notes,
+        affiliate: payload.affiliateCode,
     };
     var text = buildWaText(o);
     var url = waLink(text);
@@ -743,7 +795,7 @@ function submitOrder(order, subtotal) {
         localStorage.setItem(ORDER_KEY, JSON.stringify({ code: o.code, total: o.total, ref: o.ref, url: url, at: Date.now() }));
     } catch (e) { }
     var win = window.open(url, "_blank");
-    var isDirect = o.items.length === 1 && o.items[0].direct;
+    var isDirect = o.items.length === 1 && (order[0] && order[0].direct);
     if (!isDirect) clearCart();
     closeDrawer();
     showResult(o, url, text, win);
@@ -941,25 +993,122 @@ function paintReelTeaser() {
     }).join("");
 }
 
+/* ---------------- connected store (optional backend) ---------------- */
+var REF_KEY = "denny_ref_code";
+var API_ON = false;
+
+function refCode() {
+    try { return localStorage.getItem(REF_KEY) || ""; } catch (e) { return ""; }
+}
+
+function captureRef() {
+    var p = new URLSearchParams(location.search);
+    var code = (p.get("ref") || "").trim().toLowerCase();
+    if (code) {
+        try { localStorage.setItem(REF_KEY, code.slice(0, 40)); } catch (e) { }
+    } else {
+        code = refCode();
+    }
+    if (!code || !API_ON) return;
+    fetch(apiRoot() + "/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code, path: location.pathname }),
+    }).catch(function () { /* tracking is not worth blocking a shopper */ });
+}
+
+function apiPost(path, body) {
+    return fetch(apiRoot() + path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+            if (!res.ok) {
+                var e = new Error(data.error || "Could not save the order");
+                e.status = res.status;
+                throw e;
+            }
+            return data;
+        });
+    });
+}
+
+/* When the shop and the dashboard run on one host, API_BASE can stay empty and
+   we simply try /api/shop on this same origin. A plain static host returns a 404
+   or HTML there, so the lists in js/config.js keep being used. */
+function apiRoot() {
+    return String(API_BASE || "").replace(/\/$/, "");
+}
+
+function loadRemoteShop() {
+    var probe = API_BASE ? apiRoot() + "/api/shop" : "/api/shop";
+    return fetch(probe, { headers: { Accept: "application/json" } })
+        .then(function (res) {
+            if (!res.ok) throw new Error("shop api returned " + res.status);
+            var ct = res.headers.get("content-type") || "";
+            if (ct.indexOf("json") === -1) throw new Error("shop api answer was not json");
+            return res.json();
+        })
+        .then(function (data) {
+            if (!data || !Array.isArray(data.products) || !data.products.length) throw new Error("shop api sent no products");
+            API_ON = true;
+            if (data.shop) Object.keys(data.shop).forEach(function (k) { SHOP[k] = data.shop[k]; });
+            if (data.momo) Object.keys(data.momo).forEach(function (k) { MOMO[k] = data.momo[k]; });
+            if (data.money && data.money.currency) MONEY.currency = data.money.currency;
+            if (data.delivery) {
+                DELIVERY.freeOver = Number(data.delivery.freeOver) || 0;
+                if (Array.isArray(data.delivery.zones) && data.delivery.zones.length) DELIVERY.zones = data.delivery.zones;
+            }
+            if (Array.isArray(data.products) && data.products.length) {
+                PRODUCTS = data.products.map(function (p) {
+                    (p.colors || []).forEach(function (c) { COLOR_SWATCHES[c.name] = c.swatch; });
+                    return {
+                        id: p.id, name: p.name, category: p.category, price: Number(p.price),
+                        img: p.img, badge: p.badge || "", sizes: p.sizes || [],
+                        colors: (p.colors || []).map(function (c) { return c.name; }),
+                    };
+                });
+            }
+            if (Array.isArray(data.reels)) {
+                REELS = data.reels.map(function (r) {
+                    return {
+                        src: r.src, poster: r.poster, title: r.title, meta: r.meta, text: r.text,
+                        link: r.link, linkLabel: r.link_label, consent: r.consent,
+                    };
+                });
+            }
+            return true;
+        })
+        .catch(function (e) {
+            if (window.console && console.warn) console.warn("Shop API unavailable, using js/config.js:", e.message);
+            return false;
+        });
+}
+
 /* ---------------- boot ---------------- */
 document.addEventListener("DOMContentLoaded", function () {
-    ensureChrome();
+    captureRef();
     wireNav();
     readQuery();
-    var host = document.getElementById("product_grid");
-    if (host) {
-        var slot = document.getElementById("shop_toolbar_slot");
-        if (slot) slot.innerHTML = toolbarHtml();
-        wireToolbar();
-        paintGrid();
-        wireGridEvents(host);
-        if (location.hash === "#search") {
-            var s = document.getElementById("grid_search");
-            if (s) s.focus();
+    loadRemoteShop().then(function () {
+        ensureChrome();
+        var host = document.getElementById("product_grid");
+        if (host) {
+            var slot = document.getElementById("shop_toolbar_slot");
+            if (slot) slot.innerHTML = toolbarHtml();
+            wireToolbar();
+            paintGrid();
+            wireGridEvents(host);
+            if (location.hash === "#search") {
+                var s = document.getElementById("grid_search");
+                if (s) s.focus();
+            }
         }
-    }
-    paintReels();
-    paintReelTeaser();
-    wireSubscribe();
-    wireContactForm();
+        paintReels();
+        paintReelTeaser();
+        if (API_ON) captureRef();
+        wireSubscribe();
+        wireContactForm();
+    });
 });
