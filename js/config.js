@@ -66,3 +66,21 @@ var CATEGORIES = [
     { key: "men", label: "Men" },
     { key: "women", label: "Women" }
 ];
+
+/* Swatch colour for each name used in PRODUCTS. Add a line when you
+   introduce a new colour name; unknown names fall back to grey. */
+var COLOR_SWATCHES = {
+    White: "#ffffff",
+    Cream: "#f0e2c4",
+    Yellow: "#e8c33a",
+    Pink: "#e58fb1",
+    Red: "#c0392b",
+    Green: "#2e7d32",
+    Blue: "#1e5aa8",
+    Navy: "#002c3e",
+    Khaki: "#bfae86",
+    Grey: "#8a8a8a",
+    Black: "#101010",
+    Striped: "repeating-linear-gradient(135deg, #ffffff 0 6px, #d9d9d9 6px 12px)"
+};
+var COLOR_FALLBACK = "#d9d9d9";

@@ -89,7 +89,7 @@ function addToCart(id, size, color, qty) {
     else items.push({ id: id, name: p.name, img: p.img, price: p.price, size: size, color: color, qty: qty || 1 });
     writeCart(items);
     paintCart();
-    flash("Added to cart: " + p.name + " (" + size + ")");
+    flash("Added to cart: " + p.name + " (" + size + ", " + color + ")");
 }
 
 function setQty(index, delta) {
@@ -330,27 +330,88 @@ function fallbackCopy(text) {
 }
 
 /* ---------------- product cards ---------------- */
+function swatch(name) {
+    return (COLOR_SWATCHES && COLOR_SWATCHES[name]) || COLOR_FALLBACK;
+}
+
+function chipRow(p, kind, values) {
+    var chips = values.map(function (v) {
+        var isColor = kind === "color";
+        var cls = "pc_chip" + (isColor ? " pc_sw" : "");
+        var inner = isColor
+            ? '<span class="sw_dot" style="background:' + swatch(v) + '"></span>' + esc(v)
+            : esc(v);
+        return '<button type="button" class="' + cls + '" data-kind="' + kind + '" data-val="' + esc(v) +
+            '" aria-pressed="false">' + inner + "</button>";
+    }).join("");
+    return '<div class="pc_group" data-group="' + kind + '">' +
+        '<span class="pc_label">' + (kind === "size" ? "Size" : "Colour") + "</span>" +
+        '<div class="pc_chips">' + chips + "</div></div>";
+}
+
 function cardHtml(p) {
     var badge = p.badge ? '<span class="card_badge">' + esc(p.badge) + "</span>" : "";
-    var sizeSel = '<select class="size_pick" aria-label="Choose size for ' + esc(p.name) + '">' +
-        (p.sizes || []).map(function (s) { return '<option value="' + esc(s) + '">' + esc(s) + "</option>"; }).join("") +
-        "</select>";
     return '<div class="col-sm-6 col-md-4 col-lg-3 product_cell" data-id="' + esc(p.id) +
         '" data-cat="' + esc(p.category) + '" data-price="' + p.price +
-        '" data-name="' + esc(p.name.toLowerCase()) + '">' +
+        '" data-name="' + esc(p.name.toLowerCase()) + '" data-size="" data-color="">' +
         '<div class="box">' + badge +
+        '<div class="card_media">' +
         '<div class="option_container"><div class="options">' +
         '<button type="button" class="option1 js-cart">Add To Cart</button>' +
         '<button type="button" class="option2 js-buy">Buy Now</button>' +
         "</div></div>" +
         '<div class="img-box"><img src="' + esc(p.img) + '" alt="' + esc(p.name) + '"></div>' +
+        "</div>" +
         '<div class="detail-box">' +
-        "<h5>" + esc(p.name) + "</h5><h6>" + fmt(p.price) + "</h6>" +
-        '<div class="buy-row">' + sizeSel +
-        '<button type="button" class="br-cart js-cart">Add</button>' +
-        '<button type="button" class="br-buy js-buy">Buy Now</button>' +
+        '<div class="pc_head"><h5>' + esc(p.name) + "</h5><h6>" + fmt(p.price) + "</h6></div>" +
+        chipRow(p, "size", p.sizes || []) +
+        chipRow(p, "color", p.colors || []) +
+        '<p class="pc_hint" role="status"></p>' +
+        '<div class="pc_actions">' +
+        '<button type="button" class="pc_add js-cart"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Add to cart</button>' +
+        '<button type="button" class="pc_buy js-buy">Buy Now</button>' +
         "</div></div></div></div>";
 }
+
+/* selection + gate helpers, all state lives on the card element */
+function pickChip(cell, btn) {
+    var kind = btn.dataset.kind;
+    var chips = all(".pc_chip[data-kind=\"" + kind + "\"]", cell);
+    chips.forEach(function (c) {
+        var on = c === btn;
+        c.classList.toggle("is-on", on);
+        c.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    cell.dataset[kind === "size" ? "size" : "color"] = btn.dataset.val;
+    clearHint(cell);
+}
+
+function clearHint(cell) {
+    var h = q1(".pc_hint", cell);
+    if (h) { h.textContent = ""; h.classList.remove("show"); }
+    all(".pc_group", cell).forEach(function (g) { g.classList.remove("missing"); });
+}
+
+function showHint(cell, missing) {
+    var h = q1(".pc_hint", cell);
+    if (h) {
+        h.textContent = "Choose " + (missing.length === 2 ? "a size and a colour" : "a " + missing[0]);
+        h.classList.add("show");
+    }
+    all(".pc_group", cell).forEach(function (g) {
+        g.classList.toggle("missing", missing.indexOf(g.dataset.group) !== -1);
+    });
+    if (h) h.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function readPick(cell) {
+    var missing = [];
+    if (!cell.dataset.size) missing.push("size");
+    if (!cell.dataset.color) missing.push("color");
+    return missing.length ? { missing: missing } : { size: cell.dataset.size, color: cell.dataset.color };
+}
+
+function q1(sel, root) { return root.querySelector(sel); }
 
 function visibleProducts() {
     var list = PRODUCTS.filter(function (p) {
@@ -427,22 +488,27 @@ function wireGridEvents(host) {
     host.addEventListener("click", function (ev) {
         var cell = ev.target.closest(".product_cell");
         if (!cell) return;
+        var chip = ev.target.closest(".pc_chip");
+        if (chip) { pickChip(cell, chip); return; }
         var p = getProduct(cell.dataset.id);
         if (!p) return;
-        var sizeEl = cell.querySelector(".size_pick");
-        var size = sizeEl ? sizeEl.value : p.sizes[0];
-        if (ev.target.closest(".js-cart")) addToCart(p.id, size, p.colors[0], 1);
-        else if (ev.target.closest(".js-buy")) buyNow(p.id, size);
+        var wantCart = ev.target.closest(".js-cart");
+        var wantBuy = ev.target.closest(".js-buy");
+        if (!wantCart && !wantBuy) return;
+        var pick = readPick(cell);
+        if (pick.missing) { showHint(cell, pick.missing); return; }
+        if (wantCart) addToCart(p.id, pick.size, pick.color, 1);
+        else buyNow(p.id, pick.size, pick.color);
     });
 }
 
 /* Buy Now = one item straight to checkout, cart untouched. */
-function buyNow(id, size) {
+function buyNow(id, size, color) {
     var p = getProduct(id);
     if (!p) return;
     var item = {
         id: p.id, name: p.name, img: p.img, price: p.price,
-        size: size || p.sizes[0], color: p.colors[0] || "", qty: 1, direct: true
+        size: size, color: color, qty: 1, direct: true
     };
     ensureChrome();
     openCheckout([item]);

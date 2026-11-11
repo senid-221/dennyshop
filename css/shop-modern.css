@@ -6,6 +6,12 @@
    spacing and touch-device access to controls.
    ============================================================ */
 
+:root {
+    /* validation text has to clear AA on white and on #f7f8f9,
+       which the brand red (#f7444e) does not at 12px */
+    --shop-err: #c22630;
+}
+
 /* ---------- header: compact so the whole row fits one line ---------- */
 .navbar-brand img {
     max-width: 175px;
@@ -174,11 +180,35 @@
     font-size: 14px;
 }
 
-/* ---------- product cards: buy controls reachable on touch ---------- */
-@media (hover: none) {
-    .product_section .option_container {
-        display: none;
-    }
+/* ---------- product card ----------
+   the photo keeps the template hover motion, the body carries the size and
+   colour pickers and stays clickable because the overlay covers the photo
+   only, not the whole card. */
+.product_section .box {
+    height: 100%;
+    padding: 18px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    flex-direction: column;
+}
+
+.product_section .card_media {
+    position: relative;
+    height: 210px;
+    flex: 0 0 auto;
+    background: #fff;
+    overflow: hidden;
+}
+
+.product_section .card_media .img-box {
+    height: 100%;
+}
+
+.product_section .card_media .img-box img {
+    max-height: 190px;
 }
 
 /* overlay buttons are <button> now, they must look like the template <a> */
@@ -195,91 +225,10 @@
     font-size: 14px;
 }
 
-.product_section .box .detail-box {
-    flex-wrap: wrap;
-}
-
-.buy-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    flex: 1 1 100%;
-    width: 100%;
-    margin-top: 12px;
-}
-
-.buy-row .size_pick {
-    flex: 0 0 auto;
-    min-width: 0;
-    font-size: 13px;
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 30px;
-    background: #fff;
-    color: #131313;
-}
-
-/* on hover-capable screens the template overlay still carries the buy
-   buttons, so only the size picker sits in the card */
-.buy-row button {
-    display: none;
-    flex: 1 1 0;
-    min-width: 0;
-    border-radius: 30px;
-    padding: 9px 10px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all .3s;
-}
-
-.buy-row .br-cart {
-    background: #f7444e;
-    border: 1px solid #f7444e;
-    color: #fff;
-}
-
-.buy-row .br-cart:hover {
-    background: transparent;
-    color: #f7444e;
-}
-
-.buy-row .br-buy {
-    background: #000000;
-    border: 1px solid #000000;
-    color: #ffffff;
-}
-
-.buy-row .br-buy:hover {
-    background: transparent;
-    color: #000000;
-}
-
-@media (max-width: 991px), (hover: none) {
-    .buy-row {
-        display: flex;
-        justify-content: stretch;
-    }
-
-    .buy-row button {
-        display: block;
-    }
-
-    .product_section .box .detail-box {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .product_section .box .detail-box h6 {
-        margin-top: 2px;
-    }
-}
-
 .card_badge {
     position: absolute;
-    top: 12px;
-    left: 12px;
+    top: 10px;
+    left: 10px;
     z-index: 4;
     background: #002c3e;
     color: #fff;
@@ -291,8 +240,179 @@
     padding: 4px 12px;
 }
 
-.product_section .box {
-    height: 100%;
+.product_section .box .detail-box {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    flex: 1 1 auto;
+    margin-top: 6px;
+}
+
+.pc_head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    min-height: 46px;
+}
+
+.pc_head h5 {
+    margin-top: 0;
+    font-size: 16px;
+    line-height: 1.25;
+}
+
+.pc_head h6 {
+    margin-top: 0;
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.pc_group {
+    margin-top: 10px;
+    /* two chip rows reserved so every card ends the same height */
+    min-height: 89px;
+}
+
+.pc_label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    color: #002c3e;
+    margin-bottom: 6px;
+}
+
+.pc_group.missing .pc_label {
+    color: var(--shop-err);
+}
+
+.pc_group.missing .pc_chip {
+    border-color: var(--shop-err);
+}
+
+.pc_chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.pc_chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 4px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    background: #fff;
+    color: #131313;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+.pc_chip:hover {
+    border-color: #131313;
+}
+
+.pc_chip.is-on {
+    background: #002c3e;
+    border-color: #002c3e;
+    color: #fff;
+}
+
+.pc_chip.pc_sw {
+    padding-left: 6px;
+}
+
+.sw_dot {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, .28);
+}
+
+.pc_chip.is-on .sw_dot {
+    border-color: rgba(255, 255, 255, .75);
+}
+
+.pc_hint {
+    display: none;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--shop-err);
+    margin: 8px 0 0;
+}
+
+.pc_hint.show {
+    display: block;
+}
+
+.pc_actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.pc_actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: 30px;
+    padding: 10px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s;
+}
+
+.pc_add {
+    background: #f7444e;
+    border: 1px solid #f7444e;
+    color: #fff;
+}
+
+.pc_add:hover {
+    background: transparent;
+    color: #f7444e;
+}
+
+.pc_buy {
+    background: #000000;
+    border: 1px solid #000000;
+    color: #ffffff;
+}
+
+.pc_buy:hover {
+    background: transparent;
+    color: #000000;
+}
+
+@media (hover: none) {
+    .product_section .option_container {
+        display: none;
+    }
+}
+
+@media (max-width: 400px) {
+    .pc_head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-height: 0;
+    }
+
+    .pc_head h6 {
+        white-space: normal;
+    }
 }
 
 /* ---------- floating buttons: always circular, icon only ---------- */
@@ -510,7 +630,7 @@
 }
 
 .cl_remove:hover {
-    color: #f7444e;
+    color: var(--shop-err);
 }
 
 .drawer_empty {
@@ -741,7 +861,7 @@
 .field_error {
     display: none;
     font-size: 12px;
-    color: #f7444e;
+    color: var(--shop-err);
     margin: -10px 0 12px;
 }
 
@@ -881,13 +1001,13 @@
 }
 
 .loc_status.err {
-    color: #f7444e;
+    color: var(--shop-err);
 }
 
 .loc_map_link {
     font-size: 13px;
     font-weight: 700;
-    color: #f7444e;
+    color: var(--shop-err);
     word-break: break-all;
 }
 
@@ -1032,4 +1152,14 @@ footer .information_f a:hover {
 .client_section .img_container .img-box .img_box-inner .fa {
     font-size: 54px;
     color: #f7444e;
+}
+
+/* ---------- keep the floating buttons off the card controls ----------
+   measured collision: phone widths (1-col cards reach the right edge) and
+   small laptops (the 1170px container leaves less than the 64px the FAB
+   needs). Reserve that column so no Buy button sits under a floating button. */
+@media (max-width: 991px), (min-width: 1185px) and (max-width: 1299px) {
+    #product_grid {
+        padding-right: 60px;
+    }
 }
