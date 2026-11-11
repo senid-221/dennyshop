@@ -91,12 +91,6 @@
       ]
     }
   ],
-  "builds": [
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
-    }
-  ],
   "functions": {
     "api/index.js": {
       "memory": 1024,
