@@ -404,7 +404,9 @@
     }
 }
 
-@media (max-width: 400px) {
+@media (max-width: 575px) {
+    /* name above price, both on the left, so nothing sits at the right edge
+       where the floating buttons live */
     .pc_head {
         flex-direction: column;
         align-items: flex-start;
@@ -456,6 +458,17 @@
 .fab .cart_count {
     top: -4px;
     right: -2px;
+}
+
+/* the buttons get out of the way instead of the cards losing width */
+.shop-fabs {
+    transition: opacity .2s, transform .2s;
+}
+
+.shop-fabs.corner-block {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
 }
 
 /* ---------- cart drawer ---------- */
@@ -1156,13 +1169,34 @@ footer .information_f a:hover {
     color: #f7444e;
 }
 
-/* ---------- keep the floating buttons off the card controls ----------
-   measured collision: phone widths (1-col cards reach the right edge) and
-   small laptops (the 1170px container leaves less than the 64px the FAB
-   needs). Reserve that column so no Buy button sits under a floating button. */
-@media (max-width: 991px), (min-width: 1185px) and (max-width: 1299px) {
+/* ---------- floating buttons on phones ----------
+   the cards must reach both edges, so no side gutter is used here.
+   Instead the buttons are smaller and tucked into the corner, and the grid
+   gets a bottom safe area so the last card's controls clear them. */
+@media (max-width: 575px) {
+    .shop-fabs {
+        right: 10px;
+        bottom: 12px;
+        gap: 8px;
+    }
+
+    .fab {
+        width: 42px;
+        height: 42px;
+        font-size: 17px;
+    }
+
+    .fab .cart_count {
+        min-width: 16px;
+        height: 16px;
+        line-height: 16px;
+        font-size: 10px;
+        top: -4px;
+        right: -3px;
+    }
+
     #product_grid {
-        padding-right: 60px;
+        padding-bottom: 26px;
     }
 }
 
@@ -1321,4 +1355,21 @@ footer .information_f a:hover {
 
 .reel_teaser a:hover span {
     background: #f7444e;
+}
+
+/* ---------- stop the full-width bands from overflowing sideways ----------
+   .container_fuild has no horizontal padding, so Bootstrap's -15px row
+   margins pushed the band 15px past the viewport on phones. */
+.inner_page_head .container_fuild,
+.subscribe_section .container-fuild {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+@media (max-width: 575px) {
+    .inner_page_head .container_fuild > .row,
+    .subscribe_section .container-fuild > .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }
