@@ -276,7 +276,7 @@
 .pc_group {
     margin-top: 10px;
     /* two chip rows reserved so every card ends the same height */
-    min-height: 89px;
+    min-height: 105px;
 }
 
 .pc_label {
@@ -307,8 +307,8 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    min-height: 30px;
-    padding: 4px 12px;
+    min-height: 38px;
+    padding: 6px 14px;
     border: 1px solid #ccc;
     border-radius: 20px;
     background: #fff;
@@ -596,8 +596,8 @@
 }
 
 .qty button {
-    width: 28px;
-    height: 26px;
+    width: 38px;
+    height: 34px;
     border: none;
     background: #fff;
     font-size: 15px;
@@ -618,8 +618,7 @@
     font-weight: 700;
 }
 
-.cl_remove {
-    display: block;
+    .cl_remove {
     background: none;
     border: none;
     color: #999;
