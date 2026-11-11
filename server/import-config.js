@@ -43,7 +43,7 @@ async function importAll(db, repoRoot) {
     for (const r of (cfg.REELS || [])) {
       await db.query(
         "INSERT INTO reels (src,poster,title,meta,text,link,link_label,consent) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
-        [r.src, r.poster || "", r.title, r.meta || "", r.text || "", r.link || "product.html",
+        [r.src, r.poster || "", r.title, r.meta || "", r.text || "", r.link || "/product",
           r.linkLabel || "Shop now", r.consent || "Product photos only - no people."]);
       report.reels++;
     }

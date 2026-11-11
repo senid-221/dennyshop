@@ -3,11 +3,11 @@
 
 const DEFAULT_SETTINGS = {
   "shop.name": "Denny Shop",
-  "shop.whatsapp": "25083600961",
-  "shop.phoneDisplay": "+250 836 00 961",
+  "shop.whatsapp": "250783600961",
+  "shop.phoneDisplay": "+250 783 600 961",
   "shop.email": "info@dennyshop.com",
   "shop.address": "Muhanga - Rwanda",
-  "momo.number": "083600961",
+  "momo.number": "0783600961",
   "momo.name": "DENNY SHOP",
   "momo.network": "MTN MoMo",
   "momo.ussd": "",

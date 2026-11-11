@@ -3,11 +3,16 @@ const path = require("path");
 const fs = require("fs");
 
 const PAGES = {
+  "/product": "product.html",
   "/products": "product.html",
   "/shop": "product.html",
+  "/reel": "reels.html",
   "/reels": "reels.html",
-  "/delivery": "contact.html",
+  "/checkout": "checkout.html",
+  "/buy": "checkout.html",
   "/payment": "contact.html",
+  "/proof": "contact.html",
+  "/delivery": "contact.html",
   "/contact": "contact.html",
   "/about": "about.html",
   "/promises": "testimonial.html",
@@ -47,6 +52,18 @@ function applyRoutes(app, ctx) {
       }
     } catch (e) { /* a broken link should not throw a 500 at a shopper */ }
     res.status(404).send(notFoundHtml("That advertiser link is no longer active."));
+  });
+
+  /* /buy?product=ID&size=M&color=Blue straight to the checkout page */
+  app.get("/buy", function (req, res) {
+    const q = req.query || {};
+    const params = new URLSearchParams();
+    ["product", "size", "color", "qty"].forEach(function (key) {
+      const value = String(q[key] || "").slice(0, 40);
+      if (value) params.set(key, value);
+    });
+    const tail = params.toString();
+    res.redirect(302, "/checkout" + (tail ? "?" + tail : ""));
   });
 
   Object.keys(PAGES).forEach(function (route) {
@@ -92,7 +109,7 @@ function notFoundHtml(msg) {
     'a{display:inline-block;background:#f7444e;color:#fff;text-decoration:none;border-radius:999px;padding:11px 22px;' +
     'font-size:13px;font-weight:700;text-transform:uppercase}</style></head><body><div class="box">' +
     '<h1>404</h1><p>' + (msg || "We could not find that page.") + '</p>' +
-    '<a href="/index.html">Back to the shop</a></div></body></html>';
+    '<a href="/">Back to the shop</a></div></body></html>';
 }
 
 module.exports = { applyRoutes, applyGuard, applyFallback, PAGES };

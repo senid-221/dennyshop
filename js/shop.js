@@ -10,6 +10,16 @@ var ORDER_KEY = "denny_last_order_v1";
 var gridState = { cat: "all", sort: "featured", q: "" };
 var sharedLocation = null;
 
+/* the checkout form can live in the modal or on the /checkout page */
+var ckRoot = null;
+var ckMode = "modal";
+
+function ckEl(id) {
+    /* elements have no getElementById, so scope with a selector instead */
+    var root = ckRoot || document;
+    return root.querySelector ? root.querySelector("#" + id) : null;
+}
+
 /* ---------------- money ---------------- */
 function fmt(n) {
     var v = Math.round(Number(n) || 0);
@@ -37,6 +47,16 @@ function getProduct(id) {
     /* card data-id is always a string, while database ids are numbers */
     for (var i = 0; i < PRODUCTS.length; i++) {
         if (String(PRODUCTS[i].id) === String(id)) return PRODUCTS[i];
+    }
+    return null;
+}
+
+/* /buy links may carry the numeric id or the shop code (p1), in either mode */
+function findProduct(key) {
+    var want = String(key || "");
+    for (var i = 0; i < PRODUCTS.length; i++) {
+        if (String(PRODUCTS[i].id) === want) return PRODUCTS[i];
+        if (PRODUCTS[i].sku && String(PRODUCTS[i].sku) === want) return PRODUCTS[i];
     }
     return null;
 }
@@ -286,7 +306,14 @@ function wireChrome() {
     document.getElementById("drawer_close").addEventListener("click", closeDrawer);
     document.getElementById("shop_backdrop").addEventListener("click", closeDrawer);
     document.getElementById("fab_cart").addEventListener("click", openDrawer);
-    document.getElementById("drawer_checkout").addEventListener("click", function () { openCheckout(null); });
+    document.getElementById("drawer_checkout").addEventListener("click", function () {
+        if (document.getElementById("checkout_mount")) {
+            closeDrawer();
+            document.getElementById("checkout_mount").scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+        }
+        openCheckout(null);
+    });
     document.getElementById("drawer_zone").addEventListener("change", paintCart);
     document.getElementById("drawer_body").addEventListener("click", function (ev) {
         var t = ev.target;
@@ -521,11 +548,49 @@ function openCheckout(items) {
     var order = items && items.length ? items : readCart();
     if (!order.length) { flash("Your cart is empty"); openDrawer(); return; }
     var subtotal = cartSubtotal(order);
-    var card = document.getElementById("modal_card");
+    ckMode = "modal";
+    ckRoot = document.getElementById("modal_card");
+    var card = ckRoot;
     card.innerHTML = checkoutHtml();
     document.getElementById("shop_modal").classList.add("is-open");
     renderSummary(order, subtotal);
     wireCheckout(order, subtotal);
+}
+
+/* /checkout renders the same form inside the page instead of the modal */
+function mountPageCheckout() {
+    var host = document.getElementById("checkout_mount");
+    if (!host) return;
+    ensureChrome();
+    var p = new URLSearchParams(location.search);
+    var order = [];
+    if (p.get("product")) {
+        var prod = findProduct(p.get("product"));
+        if (prod) {
+            order = [{
+                id: prod.id, name: prod.name, img: prod.img, price: prod.price,
+                size: p.get("size") || prod.sizes[0], color: p.get("color") || prod.colors[0],
+                qty: Math.min(20, Math.max(1, Number(p.get("qty")) || 1)), direct: true,
+            }];
+        }
+    }
+    if (!order.length) order = readCart();
+    if (!order.length) {
+        host.innerHTML = '<div class="checkout_empty"><h3>Your cart is empty</h3>' +
+            "<p>Add an item from the shop, or send us a message on WhatsApp and we order it for you.</p>" +
+            '<div class="shop-btn-row"><a class="shop-btn" href="/product">Browse products</a>' +
+            '<a class="shop-btn ghost" href="' + waLink("Hello " + SHOP.name + ", I want to order.") + '" target="_blank" rel="noopener">' +
+            '<i class="fa fa-whatsapp" aria-hidden="true"></i> Order on WhatsApp</a></div></div>';
+        return;
+    }
+    ckMode = "page";
+    ckRoot = host;
+    host.innerHTML = '<div class="form_card">' + checkoutHtml().replace('id="ck_close"', 'id="ck_close" style="display:none"') + "</div>";
+    var subtotal = cartSubtotal(order);
+    renderSummary(order, subtotal);
+    wireCheckout(order, subtotal);
+    var back = document.getElementById("checkout_items_link");
+    if (back) back.addEventListener("click", function () { closeDrawer(); });
 }
 
 function checkoutHtml() {
@@ -604,7 +669,7 @@ function checkoutHtml() {
 }
 
 function renderSummary(order, subtotal) {
-    var zone = document.getElementById("ck_zone").value;
+    var zone = ckEl("ck_zone").value;
     var fee = deliveryFeeFor(zone, subtotal);
     var total = subtotal + fee;
     var html = order.map(function (it) {
@@ -613,19 +678,19 @@ function renderSummary(order, subtotal) {
     }).join("");
     html += '<div class="sl_row"><span>Delivery - ' + esc(zone) + "</span><span>" + (fee ? fmt(fee) : "Free") + "</span></div>";
     html += '<div class="sl_row total"><span>Total</span><span>' + fmt(total) + "</span></div>";
-    document.getElementById("ck_summary").innerHTML = html;
-    document.getElementById("ck_momo_amt").textContent = fmt(total);
-    var cp = document.getElementById("ck_amt_copy");
+    ckEl("ck_summary").innerHTML = html;
+    ckEl("ck_momo_amt").textContent = fmt(total);
+    var cp = ckEl("ck_amt_copy");
     if (cp) cp.dataset.copy = String(total);
 }
 
 function wireCheckout(order, subtotal) {
-    document.getElementById("ck_close").addEventListener("click", closeModal);
-    document.getElementById("ck_zone").addEventListener("change", function () { renderSummary(order, subtotal); });
-    document.getElementById("ck_geo").addEventListener("click", function () {
-        askLocation(document.getElementById("ck_geo_status"), document.getElementById("ck_geo_link"));
+    ckEl("ck_close").addEventListener("click", closeModal);
+    ckEl("ck_zone").addEventListener("change", function () { renderSummary(order, subtotal); });
+    ckEl("ck_geo").addEventListener("click", function () {
+        askLocation(ckEl("ck_geo_status"), ckEl("ck_geo_link"));
     });
-    document.getElementById("ck_form").addEventListener("submit", function (ev) {
+    ckEl("ck_form").addEventListener("submit", function (ev) {
         ev.preventDefault();
         submitOrder(order, subtotal);
     });
@@ -649,24 +714,24 @@ function normalizePhone(raw) {
 
 function validateCheckout() {
     var ok = true;
-    var name = document.getElementById("ck_name").value.trim();
+    var name = ckEl("ck_name").value.trim();
     showErr("e_name", name.length < 3);
     if (name.length < 3) ok = false;
 
-    var phone = normalizePhone(document.getElementById("ck_phone").value);
+    var phone = normalizePhone(ckEl("ck_phone").value);
     showErr("e_phone", !phone);
     if (!phone) ok = false;
 
-    var district = document.getElementById("ck_district").value.trim();
+    var district = ckEl("ck_district").value.trim();
     var noLoc = !district && !sharedLocation;
     showErr("e_district", noLoc);
     if (noLoc) ok = false;
 
-    var ref = document.getElementById("ck_ref").value.trim().replace(/\s+/g, "");
+    var ref = ckEl("ck_ref").value.trim().replace(/\s+/g, "");
     showErr("e_ref", ref.length < 6);
     if (ref.length < 6) ok = false;
 
-    var paid = document.getElementById("ck_paid").checked;
+    var paid = ckEl("ck_paid").checked;
     showErr("e_paid", !paid);
     if (!paid) ok = false;
 
@@ -718,20 +783,20 @@ function submitOrder(order, subtotal) {
         flash("Complete the highlighted fields first");
         return;
     }
-    var zone = document.getElementById("ck_zone").value;
+    var zone = ckEl("ck_zone").value;
     var fee = deliveryFeeFor(zone, subtotal);
     var payload = {
         name: v.name,
         phone: v.phone,
-        email: document.getElementById("ck_email").value.trim(),
-        district: document.getElementById("ck_district").value.trim(),
-        sector: document.getElementById("ck_sector").value.trim(),
-        landmark: document.getElementById("ck_landmark").value.trim(),
+        email: ckEl("ck_email").value.trim(),
+        district: ckEl("ck_district").value.trim(),
+        sector: ckEl("ck_sector").value.trim(),
+        landmark: ckEl("ck_landmark").value.trim(),
         mapUrl: sharedLocation ? mapsUrl(sharedLocation.lat, sharedLocation.lng) : "",
         zone: zone,
         momoRef: v.ref,
         paid: true,
-        notes: document.getElementById("ck_notes").value.trim(),
+        notes: ckEl("ck_notes").value.trim(),
         affiliateCode: refCode(),
         items: order.map(function (it) { return { id: it.id, size: it.size, color: it.color, qty: it.qty }; }),
     };
@@ -740,7 +805,7 @@ function submitOrder(order, subtotal) {
         finalise(order, subtotal, fee, zone, payload, orderCode(), subtotal + fee, null);
         return;
     }
-    var btn = document.getElementById("ck_submit");
+    var btn = ckEl("ck_submit");
     if (btn) btn.disabled = true;
     apiPost("/api/orders", payload).then(function (res) {
         if (btn) btn.disabled = false;
@@ -758,7 +823,7 @@ function showServerErrors(e) {
     var slot = document.getElementById("e_submit");
     if (!slot) {
         slot = el('<p class="field_error show" id="e_submit"></p>');
-        var btn = document.getElementById("ck_submit");
+        var btn = ckEl("ck_submit");
         if (btn && btn.parentNode) btn.parentNode.insertBefore(slot, btn);
     }
     slot.textContent = e.message;
@@ -803,9 +868,9 @@ function finalise(order, subtotal, fee, zone, payload, code, total, serverLines)
 }
 
 function showResult(o, url, text, opened) {
-    var card = document.getElementById("modal_card");
+    var card = ckRoot || document.getElementById("modal_card");
     card.innerHTML =
-        '<button type="button" class="modal_close" id="ck_close2" aria-label="Close">&times;</button>' +
+        (ckMode === "modal" ? '<button type="button" class="modal_close" id="ck_close2" aria-label="Close">&times;</button>' : "") +
         '<div class="result_box">' +
         '<i class="fa fa-check-circle" aria-hidden="true"></i>' +
         "<h3>Order " + esc(o.code) + " is written out</h3>" +
@@ -821,8 +886,9 @@ function showResult(o, url, text, opened) {
         '<p class="proof_hint" style="margin-top:16px;">Not paid yet? Send ' + fmt(o.total) + " to " + esc(MOMO.merchantNumber) +
         " (" + esc(MOMO.merchantName) + ") first, then write the " + esc(MOMO.refLabel) + " in the WhatsApp chat.</p>" +
         "</div>";
-    document.getElementById("ck_close2").addEventListener("click", closeModal);
-    document.getElementById("ck_copy").addEventListener("click", function (ev) { copyText(text, ev.currentTarget); });
+    var closeBtn = ckEl("ck_close2");
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    ckEl("ck_copy").addEventListener("click", function (ev) { copyText(text, ev.currentTarget); });
 }
 
 /* ---------------- contact form -> WhatsApp ---------------- */
@@ -906,10 +972,10 @@ function wireNav() {
     }
     /* the template ships empty hrefs; point them at real destinations */
     all('.slider_section a.btn1[href=""], .arrival_section a[href=""]').forEach(function (a) {
-        a.setAttribute("href", "product.html");
+        a.setAttribute("href", "/product");
     });
     all(".product_section .btn-box a[href=\"\"]").forEach(function (a) {
-        a.setAttribute("href", "product.html");
+        a.setAttribute("href", "/product");
     });
 }
 
@@ -987,7 +1053,7 @@ function paintReelTeaser() {
     var host = document.getElementById("reel_teaser");
     if (!host || !REELS || !REELS.length) return;
     host.innerHTML = REELS.slice(0, 3).map(function (r) {
-        return '<a href="reels.html" aria-label="Watch the reel: ' + esc(r.title) + '">' +
+        return '<a href="/reel" aria-label="Watch the reel: ' + esc(r.title) + '">' +
             '<img src="' + esc(r.poster) + '" alt="' + esc(r.title) + '">' +
             "<span>" + esc(r.title) + "</span></a>";
     }).join("");
@@ -1064,7 +1130,7 @@ function loadRemoteShop() {
                 PRODUCTS = data.products.map(function (p) {
                     (p.colors || []).forEach(function (c) { COLOR_SWATCHES[c.name] = c.swatch; });
                     return {
-                        id: p.id, name: p.name, category: p.category, price: Number(p.price),
+                        id: p.id, sku: p.sku, name: p.name, category: p.category, price: Number(p.price),
                         img: p.img, badge: p.badge || "", sizes: p.sizes || [],
                         colors: (p.colors || []).map(function (c) { return c.name; }),
                     };
@@ -1143,6 +1209,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         paintReels();
         paintReelTeaser();
+        mountPageCheckout();
         fabGuard();
         if (API_ON) captureRef();
         wireSubscribe();

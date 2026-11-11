@@ -227,7 +227,7 @@ function createApp(opts) {
     const ins = await db.query(
       "INSERT INTO reels (src, poster, title, meta, text, link, link_label, consent) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id",
       [src, S.cleanText(b.poster, 300), title, S.cleanText(b.meta, 160), S.cleanText(b.text, 300),
-        S.cleanText(b.link, 200) || "product.html", S.cleanText(b.link_label, 60) || "Shop now",
+        S.cleanText(b.link, 200) || "/product", S.cleanText(b.link_label, 60) || "Shop now",
         S.cleanText(b.consent, 200) || "Product photos only - no people."]
     );
     res.status(201).json({ id: ins[0].id });

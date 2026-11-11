@@ -65,7 +65,7 @@
     m.hidden = false;
     m.classList.add("is-open");
     m.innerHTML = '<button type="button" class="modal_x" id="modal_x" aria-label="Close">&times;</button>' +
-      '<div class="form_card"><h2>' + esc(title) + "</h2>" + innerHtml + "</div>";
+      '<div class="form_card"><h2>' + esc(title) + "</h2>" + innerHtml.replace('id="modal_form"', 'id="modal_form" class="shop-form"') + "</div>";
     $("#modal_x").addEventListener("click", closeModal);
     var form = $("#modal_form", m);
     if (form) {
@@ -134,6 +134,9 @@
   function selectTab(name) {
     $all(".tab").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === name); });
     $all(".panel").forEach(function (p) { p.hidden = (p.id !== "panel_" + name); });
+    var titles = { orders: "Orders", products: "Products", reels: "Reels", affiliates: "Advertisers", team: "Team", settings: "Store settings", me: "My links & earnings" };
+    var pt = $("#panel_title");
+    if (pt) pt.textContent = titles[name] || "Dashboard";
     var load = { orders: loadOrders, products: loadProducts, reels: loadReels, affiliates: loadAffiliates, team: loadTeam, settings: loadSettings, me: loadMe }[name];
     if (load) load().catch(function (e) { toast(e.message, true); });
   }
@@ -372,7 +375,7 @@
 
   function reelForm(r) {
     var isNew = !r;
-    r = r || { src: "reels/", poster: "", title: "", meta: "", text: "", link: "product.html", link_label: "Shop now", consent: "" };
+    r = r || { src: "reels/", poster: "", title: "", meta: "", text: "", link: "/product", link_label: "Shop now", consent: "" };
     var html = '<form id="modal_form"><p class="err" id="modal_error"></p>' +
       field("src", "Clip path", r.src) + field("poster", "Poster image path", r.poster) +
       field("title", "Title", r.title) + field("meta", "Short line (price or delivery)", r.meta) +
@@ -529,7 +532,7 @@
   function loadSettings() {
     return api("/api/admin/settings").then(function (data) {
       state.settings = data.settings;
-      var html = '<form id="settings_form" class="form_card"><p class="err" id="settings_error"></p>' +
+      var html = '<form id="settings_form" class="form_card shop-form"><p class="err" id="settings_error"></p>' +
         '<h2>Store settings</h2><div class="grid2">' +
         SETTING_FIELDS.map(function (f) { return "<div>" + field(settingSlug(f[0]), f[1], data.settings[f[0]] || "") + "</div>"; }).join("") +
         "</div>" +
@@ -593,10 +596,10 @@
   /* ---------------- wiring ---------------- */
   $("#login_form").addEventListener("submit", function (ev) {
     ev.preventDefault();
-    $("#login_error").textContent = "";
+    var le = $("#login_error"); le.textContent = ""; le.classList.remove("show");
     api("/api/auth/login", { method: "POST", body: { email: $("#login_email").value.trim(), password: $("#login_password").value } })
       .then(function (u) { me = u; showApp(); })
-      .catch(function (e) { $("#login_error").textContent = e.message; });
+      .catch(function (e) { var n = $("#login_error"); n.textContent = e.message; n.classList.add("show"); });
   });
 
   $("#logout_btn").addEventListener("click", function () {

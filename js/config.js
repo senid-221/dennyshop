@@ -16,9 +16,9 @@ var SHOP = {
     city: "Muhanga",
     country: "Rwanda",
     addressLine: "Muhanga - Rwanda",
-    phoneDisplay: "+250 836 00 961",
+    phoneDisplay: "+250 783 600 961",
     // WhatsApp recipient in international format, digits only.
-    whatsappNumber: "25083600961",
+    whatsappNumber: "250783600961",
     email: "info@dennyshop.com",
     mapLat: -2.0299,
     mapLng: 29.7164
@@ -26,7 +26,7 @@ var SHOP = {
 
 var MOMO = {
     // Money goes here. Confirm this is the live MoMo number before publishing.
-    merchantNumber: "083600961",
+    merchantNumber: "0783600961",
     merchantName: "DENNY SHOP",
     network: "MTN MoMo",
     // Optional: if you know the MoMo menu short code, set it, e.g. "*182#".
@@ -82,21 +82,21 @@ var REELS = [
         src: "reels/shirts.mp4", poster: "reels/shirts.jpg",
         title: "Shirts for men", meta: "From 84,500 RWF",
         text: "Three of the shirts in the shop right now.",
-        link: "product.html?cat=men", linkLabel: "Shop shirts",
+        link: "/product?cat=men", linkLabel: "Shop shirts",
         consent: "Product photos only - no people."
     },
     {
         src: "reels/dresses.mp4", poster: "reels/dresses.jpg",
         title: "Dresses for women", meta: "From 75,500 RWF",
         text: "Sizes XS to L. Ask on WhatsApp for the measurements.",
-        link: "product.html?cat=women", linkLabel: "Shop dresses",
+        link: "/product?cat=women", linkLabel: "Shop dresses",
         consent: "Product photos only - no people."
     },
     {
         src: "reels/new-arrivals.mp4", poster: "reels/new-arrivals.jpg",
         title: "New arrivals", meta: "Same-day rider in Muhanga and Kigali",
         text: "Fresh pieces land weekly - pay with MTN MoMo.",
-        link: "product.html", linkLabel: "See all products",
+        link: "/product", linkLabel: "See all products",
         consent: "Product photos only - no people."
     }
 ];
