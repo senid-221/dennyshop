@@ -868,6 +868,79 @@ function readQuery() {
     if (p.get("sort")) gridState.sort = p.get("sort");
 }
 
+/* ---------------- reels ---------------- */
+function reelItemHtml(r, i) {
+    return '<figure class="reel_item" data-i="' + i + '">' +
+        '<video src="' + esc(r.src) + '" poster="' + esc(r.poster) + '" muted loop playsinline preload="metadata" ' +
+        'aria-label="' + esc(r.title) + ' reel. Tap to play or pause."></video>' +
+        '<button type="button" class="reel_ctrl js-reel-sound" aria-label="Turn sound on">' +
+        '<i class="fa fa-volume-off" aria-hidden="true"></i></button>' +
+        '<figcaption class="reel_cap">' +
+        "<h5>" + esc(r.title) + "</h5>" +
+        '<p class="reel_meta">' + esc(r.meta) + "</p>" +
+        '<p class="reel_text">' + esc(r.text) + "</p>" +
+        '<div class="reel_actions">' +
+        '<a class="shop-btn" href="' + esc(r.link) + '">' + esc(r.linkLabel) + "</a>" +
+        '<a class="shop-btn ghost" href="' + waLink("Hello " + SHOP.name + ", I saw your reel \"" + r.title + "\". Is it available?") +
+        '" target="_blank" rel="noopener"><i class="fa fa-whatsapp" aria-hidden="true"></i> Ask</a>' +
+        "</div>" +
+        '<p class="reel_consent">' + esc(r.consent) + "</p>" +
+        "</figcaption></figure>";
+}
+
+function paintReels() {
+    var host = document.getElementById("reel_feed");
+    if (!host) return;
+    if (!REELS || !REELS.length) {
+        host.innerHTML = '<div class="reel_empty">No clips yet. Film a fitting or a handover on your phone, ' +
+            'get the buyer\'s OK, then add the file to reels/ and one line to REELS in js/config.js.</div>';
+        return;
+    }
+    host.innerHTML = REELS.map(reelItemHtml).join("");
+    var vids = all("video", host);
+    if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) {
+                var v = e.target;
+                if (e.intersectionRatio >= 0.6) {
+                    var p = v.play();
+                    if (p && p.catch) p.catch(function () { /* still needs a tap on some browsers */ });
+                } else {
+                    v.pause();
+                }
+            });
+        }, { threshold: [0, 0.6, 1] });
+        vids.forEach(function (v) { io.observe(v); });
+    } else {
+        vids.forEach(function (v) { v.play && v.play().catch(function () { }); });
+    }
+    host.addEventListener("click", function (ev) {
+        var sound = ev.target.closest(".js-reel-sound");
+        if (sound) {
+            var vid = sound.closest(".reel_item").querySelector("video");
+            vid.muted = !vid.muted;
+            if (!vid.muted) { var p = vid.play(); if (p && p.catch) p.catch(function () { }); }
+            sound.innerHTML = '<i class="fa fa-volume-' + (vid.muted ? "off" : "up") + '" aria-hidden="true"></i>';
+            sound.setAttribute("aria-label", vid.muted ? "Turn sound on" : "Turn sound off");
+            return;
+        }
+        var v = ev.target.closest("video");
+        if (!v) return;
+        if (v.paused) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () { }); }
+        else v.pause();
+    });
+}
+
+function paintReelTeaser() {
+    var host = document.getElementById("reel_teaser");
+    if (!host || !REELS || !REELS.length) return;
+    host.innerHTML = REELS.slice(0, 3).map(function (r) {
+        return '<a href="reels.html" aria-label="Watch the reel: ' + esc(r.title) + '">' +
+            '<img src="' + esc(r.poster) + '" alt="' + esc(r.title) + '">' +
+            "<span>" + esc(r.title) + "</span></a>";
+    }).join("");
+}
+
 /* ---------------- boot ---------------- */
 document.addEventListener("DOMContentLoaded", function () {
     ensureChrome();
@@ -885,6 +958,8 @@ document.addEventListener("DOMContentLoaded", function () {
             if (s) s.focus();
         }
     }
+    paintReels();
+    paintReelTeaser();
     wireSubscribe();
     wireContactForm();
 });

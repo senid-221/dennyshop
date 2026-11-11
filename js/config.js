@@ -67,6 +67,34 @@ var CATEGORIES = [
     { key: "women", label: "Women" }
 ];
 
+/* Reels - vertical 9:16 clips. These three are cut from the shop's own
+   product photos, so no person appears in them.
+   To publish a real buyer clip: drop the file in reels/, add a line here,
+   and only do it after that buyer has agreed to appear on the site. */
+var REELS = [
+    {
+        src: "reels/shirts.mp4", poster: "reels/shirts.jpg",
+        title: "Shirts for men", meta: "From 84,500 RWF",
+        text: "Three of the shirts in the shop right now.",
+        link: "product.html?cat=men", linkLabel: "Shop shirts",
+        consent: "Product photos only - no people."
+    },
+    {
+        src: "reels/dresses.mp4", poster: "reels/dresses.jpg",
+        title: "Dresses for women", meta: "From 75,500 RWF",
+        text: "Sizes XS to L. Ask on WhatsApp for the measurements.",
+        link: "product.html?cat=women", linkLabel: "Shop dresses",
+        consent: "Product photos only - no people."
+    },
+    {
+        src: "reels/new-arrivals.mp4", poster: "reels/new-arrivals.jpg",
+        title: "New arrivals", meta: "Same-day rider in Muhanga and Kigali",
+        text: "Fresh pieces land weekly - pay with MTN MoMo.",
+        link: "product.html", linkLabel: "See all products",
+        consent: "Product photos only - no people."
+    }
+];
+
 /* Swatch colour for each name used in PRODUCTS. Add a line when you
    introduce a new colour name; unknown names fall back to grey. */
 var COLOR_SWATCHES = {
