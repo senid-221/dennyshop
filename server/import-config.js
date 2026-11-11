@@ -9,7 +9,7 @@ const S = require("./shop");
 function readConfig(repoRoot) {
   const sandbox = vm.createContext({});
   const src = fs.readFileSync(path.join(repoRoot, "js", "config.js"), "utf8") +
-    "\n;__out = { SHOP: SHOP, MOMO: MOMO, MONEY: MONEY, DELIVERY: DELIVERY, PRODUCTS: PRODUCTS, COLOR_SWATCHES: (typeof COLOR_SWATCHES !== 'undefined' ? COLOR_SWATCHES : {}), REELS: (typeof REELS !== 'undefined' ? REELS : []) };";
+    "\n;__out = { SHOP: SHOP, MOMO: MOMO, MONEY: MONEY, DELIVERY: DELIVERY, PRODUCTS: PRODUCTS, DRAFT_PRODUCTS: (typeof DRAFT_PRODUCTS !== 'undefined' ? DRAFT_PRODUCTS : []), COLOR_SWATCHES: (typeof COLOR_SWATCHES !== 'undefined' ? COLOR_SWATCHES : {}), REELS: (typeof REELS !== 'undefined' ? REELS : []) };";
   vm.runInContext(src, sandbox);
   return sandbox.__out;
 }
@@ -18,25 +18,35 @@ async function importAll(db, repoRoot) {
   const cfg = readConfig(repoRoot);
   const report = { products: 0, reels: 0, settings: 0, skippedProducts: false };
 
-  const existing = await db.query("SELECT COUNT(*) AS n FROM products");
-  if (Number(existing[0].n) > 0) {
-    report.skippedProducts = true;
-  } else {
-    for (const p of cfg.PRODUCTS) {
-      const ins = await db.query(
-        "INSERT INTO products (sku,name,category,price,image,badge) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
-        [p.id, p.name, p.category, Math.round(Number(p.price)), p.img, p.badge || ""]);
-      const id = ins[0].id;
-      for (const name of (p.colors || [])) {
-        await db.query("INSERT INTO product_colors (product_id,name,swatch) VALUES ($1,$2,$3)",
-          [id, name, (cfg.COLOR_SWATCHES && cfg.COLOR_SWATCHES[name]) || "#d9d9d9"]);
-      }
-      for (const size of (p.sizes || [])) {
-        await db.query("INSERT INTO product_sizes (product_id,value) VALUES ($1,$2)", [id, size]);
-      }
-      report.products++;
+  /* every item in config.js is imported once, by sku, so a catalogue that
+     already has rows still picks up newly added lines */
+  const allItems = cfg.PRODUCTS.map(function (p) { return [p, false]; })
+    .concat((cfg.DRAFT_PRODUCTS || []).map(function (p) { return [p, true]; }));
+  const have = await db.query("SELECT sku FROM products");
+  const haveSku = {};
+  have.forEach(function (r) { if (r.sku) haveSku[String(r.sku)] = true; });
+
+  for (const pair of allItems) {
+    const p = pair[0];
+    const isDraft = pair[1];
+    if (haveSku[String(p.id)]) continue;
+    const ins = await db.query(
+      "INSERT INTO products (sku,name,category,price,image,badge) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
+      [p.id, p.name, p.category, Math.round(Number(p.price)), p.img, p.badge || ""]
+    );
+    const id = ins[0].id;
+    /* draft lines wait for a real photo, so shoppers never see an empty frame */
+    if (isDraft) await db.query("UPDATE products SET active = FALSE WHERE id = $1", [id]);
+    for (const name of (p.colors || [])) {
+      await db.query("INSERT INTO product_colors (product_id,name,swatch) VALUES ($1,$2,$3)",
+        [id, name, (cfg.COLOR_SWATCHES && cfg.COLOR_SWATCHES[name]) || "#d9d9d9"]);
     }
+    for (const size of (p.sizes || [])) {
+      await db.query("INSERT INTO product_sizes (product_id,value) VALUES ($1,$2)", [id, size]);
+    }
+    report.products++;
   }
+  report.skippedProducts = report.products === 0;
 
   const reels = await db.query("SELECT COUNT(*) AS n FROM reels");
   if (Number(reels[0].n) === 0) {

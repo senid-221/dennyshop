@@ -402,16 +402,24 @@ test("migrate imports the catalogue so the dashboard is never empty", async func
   const repoRoot = path.join(__dirname, "..", "..");
   const cfg = require("../import-config").readConfig(repoRoot);
   assert.ok(cfg.PRODUCTS.length > 0, "js/config.js must carry the catalogue");
+  const total = cfg.PRODUCTS.length + cfg.DRAFT_PRODUCTS.length;
 
   const report = await require("../import-config").importAll(db, repoRoot);
-  assert.equal(report.products, cfg.PRODUCTS.length);
+  assert.equal(report.products, total, "published plus draft lines are all stored");
   assert.equal(report.skippedProducts, false);
 
   const catalog = await S.loadCatalog(db, { includeHidden: true });
-  assert.equal(catalog.length, cfg.PRODUCTS.length);
+  assert.equal(catalog.length, total);
   const first = catalog.filter(function (p) { return p.sku === cfg.PRODUCTS[0].id; })[0];
   assert.ok(first.colors.length > 0 && first.sizes.length > 0);
   assert.equal(first.price, Math.round(cfg.PRODUCTS[0].price));
+
+  /* drafts must not reach shoppers */
+  const published = await S.loadCatalog(db);
+  assert.equal(published.length, cfg.PRODUCTS.length);
+  published.forEach(function (p) { assert.equal(p.active, true); });
+  const draftSku = cfg.DRAFT_PRODUCTS[0].id;
+  assert.equal(published.some(function (p) { return p.sku === draftSku; }), false);
 
   const settings = await S.getSettings(db);
   assert.equal(settings["shop.whatsapp"], cfg.SHOP.whatsappNumber);
@@ -423,15 +431,23 @@ test("migrate imports the catalogue so the dashboard is never empty", async func
   assert.equal(again.skippedProducts, true);
   assert.equal(again.products, 0);
   const after = await S.loadCatalog(db, { includeHidden: true });
-  assert.equal(after.length, cfg.PRODUCTS.length);
+  assert.equal(after.length, total);
 
-  // the dashboard reads exactly what was imported
+  // the dashboard sees everything, the storefront only the published ones
   await db.query("INSERT INTO users (email,name,password_hash,role) VALUES ('real.owner@example.rw','Owner',$1,'owner')",
     [bcrypt.hashSync("a-real-secret-10", 10)]);
   const app = createApp({ db: db, cfg: { staticDir: null } });
   const cookie = await login(app, "real.owner@example.rw", "a-real-secret-10");
   const list = await request(app).get("/api/admin/products").set("Cookie", cookie);
-  assert.equal(list.body.products.length, cfg.PRODUCTS.length);
+  assert.equal(list.body.products.length, total);
+  const shop = await request(app).get("/api/shop");
+  assert.equal(shop.body.products.length, cfg.PRODUCTS.length);
+
+  // publishing a draft with a photo makes it appear in the shop
+  const draftRow = after.filter(function (p) { return p.sku === draftSku; })[0];
+  await request(app).patch("/api/admin/products/" + draftRow.id).set("Cookie", cookie).send({ active: true });
+  const shop2 = await request(app).get("/api/shop");
+  assert.equal(shop2.body.products.length, cfg.PRODUCTS.length + 1);
 });
 
 test("reels are editable through the dashboard", async function () {

@@ -70,7 +70,30 @@ var PRODUCTS = [
 var CATEGORIES = [
     { key: "all", label: "All" },
     { key: "men", label: "Men" },
-    { key: "women", label: "Women" }
+    { key: "women", label: "Women" },
+    { key: "youth", label: "Youth" },
+    { key: "kids", label: "Kids" },
+    { key: "package", label: "Packages" }
+];
+
+/* New lines waiting for real photos. draft: true keeps them out of the shop
+   while they still show in the dashboard as hidden, so a photo plus Show is
+   all that is needed to publish them. */
+var DRAFT_PRODUCTS = [
+    { id: "p13", name: "Oversized Shirt",          category: "men",     price: 28000,  img: "images/p13.png", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Light Blue", "White", "Black"], badge: "New" },
+    { id: "p14", name: "Men's Chino Trousers",     category: "men",     price: 32000,  img: "images/p14.png", sizes: ["30", "32", "34", "36", "38"],   colors: ["Khaki", "Navy", "Black"],       badge: "" },
+    { id: "p15", name: "Long-Sleeve Shirt",        category: "men",     price: 30000,  img: "images/p15.png", sizes: ["S", "M", "L", "XL"],           colors: ["White", "Striped", "Navy"],    badge: "" },
+    { id: "p16", name: "Men's Hoodie",             category: "men",     price: 45000,  img: "images/p16.png", sizes: ["S", "M", "L", "XL", "XXL"],   colors: ["Black", "Grey", "Navy"],       badge: "New" },
+    { id: "p17", name: "Pleated Skirt",            category: "women",   price: 25000,  img: "images/p17.png", sizes: ["S", "M", "L", "XL"],           colors: ["Navy", "Red", "Black"],        badge: "New" },
+    { id: "p18", name: "High-Waist Trousers",      category: "women",   price: 30000,  img: "images/p18.png", sizes: ["S", "M", "L", "XL"],           colors: ["Black", "Cream", "Green"],     badge: "" },
+    { id: "p19", name: "Long-Sleeve Top",          category: "women",   price: 26000,  img: "images/p19.png", sizes: ["XS", "S", "M", "L"],           colors: ["White", "Pink", "Yellow"],     badge: "" },
+    { id: "p20", name: "Denim Skirt",              category: "women",   price: 28000,  img: "images/p20.png", sizes: ["S", "M", "L", "XL"],           colors: ["Blue", "Black"],               badge: "Sale" },
+    { id: "p21", name: "Youth Graphic Tee",        category: "youth",   price: 18000,  img: "images/p21.png", sizes: ["XS", "S", "M", "L"],           colors: ["White", "Black", "Yellow"],    badge: "New" },
+    { id: "p22", name: "Youth Hoodie",             category: "youth",   price: 40000,  img: "images/p22.png", sizes: ["XS", "S", "M", "L"],           colors: ["Red", "Black", "Blue"],        badge: "" },
+    { id: "p23", name: "Kids Slim Jeans",          category: "kids",    price: 22000,  img: "images/p23.png", sizes: ["4", "6", "8", "10", "12"],     colors: ["Blue", "Black"],               badge: "" },
+    { id: "p24", name: "Kids Shirt Set",           category: "kids",    price: 24000,  img: "images/p24.png", sizes: ["4", "6", "8", "10", "12"],     colors: ["White", "Striped"],            badge: "New" },
+    { id: "p25", name: "Shirt + Trouser Package",  category: "package", price: 55000,  img: "images/p25.png", sizes: ["S", "M", "L", "XL", "XXL"],   colors: ["Navy", "Khaki", "Black"],      badge: "Sale" },
+    { id: "p26", name: "Wardrobe Bundle (5 pieces)", category: "package", price: 120000, img: "images/p26.png", sizes: ["One size"],                  colors: ["Mixed"],                       badge: "New" }
 ];
 
 /* Reels - vertical 9:16 clips. These three are cut from the shop's own
@@ -115,6 +138,8 @@ var COLOR_SWATCHES = {
     Khaki: "#bfae86",
     Grey: "#8a8a8a",
     Black: "#101010",
-    Striped: "repeating-linear-gradient(135deg, #ffffff 0 6px, #d9d9d9 6px 12px)"
+    Striped: "repeating-linear-gradient(135deg, #ffffff 0 6px, #d9d9d9 6px 12px)",
+    "Light Blue": "#a9c6e8",
+    Mixed: "repeating-linear-gradient(135deg, #002c3e 0 8px, #f7444e 8px 16px, #bfae86 16px 24px)"
 };
 var COLOR_FALLBACK = "#d9d9d9";
