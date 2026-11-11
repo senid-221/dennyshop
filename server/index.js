@@ -11,6 +11,10 @@ if (!DATABASE_URL) {
 
 db.configure(DATABASE_URL);
 
+/* a background failure must never take the shop down silently */
+process.on("unhandledRejection", function (reason) { console.error("unhandled rejection:", reason && reason.message ? reason.message : reason); });
+process.on("uncaughtException", function (err) { console.error("uncaught exception:", err); });
+
 const app = createApp({
   db: { query: db.query, tx: db.tx },
   cfg: {

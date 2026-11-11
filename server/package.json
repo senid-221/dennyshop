@@ -11,7 +11,8 @@
     "migrate": "node migrate.js",
     "seed": "node seed.js",
     "owner": "node make-owner.js",
-    "test": "node --test test/"
+    "setup": "node migrate.js && node make-owner.js",
+    "test": "node --test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

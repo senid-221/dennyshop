@@ -56,7 +56,9 @@ function attachUser(db) {
   return async function (req, res, next) {
     req.user = null;
     const token = parseCookies(req.headers.cookie)[COOKIE];
-    if (token) {
+    if (!token) return next();
+    /* a database outage must sign people out, not crash the process */
+    try {
       const rows = await db.query(
         "SELECT u.id, u.email, u.name, u.role, u.active, u.affiliate_id, a.code AS affiliate_code, a.commission_pct, a.name AS affiliate_name " +
         "FROM sessions s JOIN users u ON u.id = s.user_id " +
@@ -65,6 +67,8 @@ function attachUser(db) {
         [token]
       );
       if (rows.length) req.user = rows[0];
+    } catch (e) {
+      console.error("session lookup failed:", e.message);
     }
     next();
   };

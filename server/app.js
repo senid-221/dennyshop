@@ -14,7 +14,10 @@ function wrap(fn) {
   return function (req, res, next) {
     Promise.resolve(fn(req, res, next)).catch(function (e) {
       const status = e.status || 500;
-      if (status >= 500) console.error(e);
+      if (status >= 500) {
+        console.error(e);
+        return res.status(500).json({ error: "The shop could not reach its data. Try again." });
+      }
       res.status(status).json({ error: e.message || "Server error" });
     });
   };

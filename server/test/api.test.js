@@ -397,6 +397,43 @@ test("routes: health, short links, clean pages, guarded paths and 404s", async f
   assert.equal(aff.status, 401);
 });
 
+test("migrate imports the catalogue so the dashboard is never empty", async function () {
+  const db = makeDb();
+  const repoRoot = path.join(__dirname, "..", "..");
+  const cfg = require("../import-config").readConfig(repoRoot);
+  assert.ok(cfg.PRODUCTS.length > 0, "js/config.js must carry the catalogue");
+
+  const report = await require("../import-config").importAll(db, repoRoot);
+  assert.equal(report.products, cfg.PRODUCTS.length);
+  assert.equal(report.skippedProducts, false);
+
+  const catalog = await S.loadCatalog(db, { includeHidden: true });
+  assert.equal(catalog.length, cfg.PRODUCTS.length);
+  const first = catalog.filter(function (p) { return p.sku === cfg.PRODUCTS[0].id; })[0];
+  assert.ok(first.colors.length > 0 && first.sizes.length > 0);
+  assert.equal(first.price, Math.round(cfg.PRODUCTS[0].price));
+
+  const settings = await S.getSettings(db);
+  assert.equal(settings["shop.whatsapp"], cfg.SHOP.whatsappNumber);
+  assert.equal(settings["momo.number"], cfg.MOMO.merchantNumber);
+  assert.ok(JSON.parse(settings["delivery.zones"]).length > 0);
+
+  // running it again must not duplicate anything
+  const again = await require("../import-config").importAll(db, repoRoot);
+  assert.equal(again.skippedProducts, true);
+  assert.equal(again.products, 0);
+  const after = await S.loadCatalog(db, { includeHidden: true });
+  assert.equal(after.length, cfg.PRODUCTS.length);
+
+  // the dashboard reads exactly what was imported
+  await db.query("INSERT INTO users (email,name,password_hash,role) VALUES ('real.owner@example.rw','Owner',$1,'owner')",
+    [bcrypt.hashSync("a-real-secret-10", 10)]);
+  const app = createApp({ db: db, cfg: { staticDir: null } });
+  const cookie = await login(app, "real.owner@example.rw", "a-real-secret-10");
+  const list = await request(app).get("/api/admin/products").set("Cookie", cookie);
+  assert.equal(list.body.products.length, cfg.PRODUCTS.length);
+});
+
 test("reels are editable through the dashboard", async function () {
   const db = makeDb();
   await seedCatalog(db);

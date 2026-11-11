@@ -75,10 +75,10 @@ function applyFallback(app) {
     res.status(404).send(notFoundHtml());
   });
 
-  /* keep a stack trace out of the shopper's browser */
+  /* keep a stack trace and connection details out of the shopper's browser */
   app.use(function (err, req, res, next) { // eslint-disable-line no-unused-vars
     console.error(err);
-    if (/^\/api\//.test(req.path)) return res.status(500).json({ error: "The shop hit a problem. Try again." });
+    if (/^\/api\//.test(req.path)) return res.status(500).json({ error: "The shop could not reach its data. Try again." });
     res.status(500).send(notFoundHtml("The shop hit a problem. Go back and try again."));
   });
 }
