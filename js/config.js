@@ -25,10 +25,10 @@ var SHOP = {
 };
 
 var MOMO = {
-    // Money goes here. Confirm this is the live MoMo number before publishing.
-    merchantNumber: "0783600961",
+    // MoMo Pay merchant code the customer pays to (not a phone number).
+    merchantNumber: "935237",
     merchantName: "DENNY SHOP",
-    network: "MTN MoMo",
+    network: "MTN MoMo Pay",
     // Optional: if you know the MoMo menu short code, set it, e.g. "*182#".
     // Left empty on purpose so no wrong code is ever shown to a customer.
     ussdCode: "",

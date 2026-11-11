@@ -78,7 +78,7 @@ test("public shop endpoint serves catalogue, reels and money rules", async funct
   assert.deepEqual(res.body.products[0].sizes, ["M", "L"]);
   assert.equal(res.body.products[0].colors[0].name, "Blue");
   assert.equal(res.body.shop.whatsappNumber, "250783600961");
-  assert.equal(res.body.momo.merchantNumber, "0783600961");
+  assert.equal(res.body.momo.merchantNumber, "935237");
   assert.equal(res.body.delivery.zones.length, 3);
   assert.equal(res.body.reels[0].title, "Clip A");
   void ids;

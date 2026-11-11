@@ -634,7 +634,7 @@ function checkoutHtml() {
         '<div class="step"><div class="step_head"><span class="num">4</span><h4>Pay with ' + esc(MOMO.network) + "</h4></div>" +
         '<div class="momo_panel">' +
         '<div class="momo_rows">' +
-        '<div class="momo_row"><div><div class="mr_label">MoMo number</div>' +
+        '<div class="momo_row"><div><div class="mr_label">MoMo Pay code</div>' +
         '<div class="mr_value">' + esc(MOMO.merchantNumber) + "</div></div>" +
         '<button type="button" class="copy_btn" data-copy="' + esc(MOMO.merchantNumber) + '">Copy</button></div>' +
         '<div class="momo_row"><div><div class="mr_label">Account name</div>' +
@@ -646,7 +646,7 @@ function checkoutHtml() {
         "<li>" + (MOMO.ussdCode
             ? 'Dial <strong>' + esc(MOMO.ussdCode) + "</strong> or open the " + esc(MOMO.network) + " menu."
             : "Open the " + esc(MOMO.network) + " menu on the phone you are paying from.") + "</li>" +
-        "<li>Choose <strong>Send Money / MoMo Pay</strong> and enter <strong>" + esc(MOMO.merchantNumber) + "</strong>.</li>" +
+        "<li>Open <strong>MoMo Pay</strong> (or Send Money) and enter merchant code <strong>" + esc(MOMO.merchantNumber) + "</strong>.</li>" +
         "<li>Enter the amount shown above and confirm with your PIN.</li>" +
         "<li>Keep the confirmation SMS. Write its reference in step 5 and attach the receipt in WhatsApp.</li>" +
         "</ol></div></div>" +
@@ -765,7 +765,7 @@ function buildWaText(o) {
     if (o.landmark) L.push("Landmark: " + o.landmark);
     L.push("");
     L.push("*PAYMENT - " + MOMO.network + "*");
-    L.push("Paid to: " + MOMO.merchantNumber + " (" + MOMO.merchantName + ")");
+    L.push("Paid to: " + MOMO.network + " code " + MOMO.merchantNumber + " (" + MOMO.merchantName + ")");
     L.push(MOMO.refLabel + ": " + o.ref);
     L.push("Proof: " + (/attach|screenshot|receipt/i.test(o.notes) ? "receipt screenshot attached in this chat" : "MoMo reference above, screenshot to follow"));
     if (o.affiliate) L.push("Advertiser code: " + o.affiliate);
