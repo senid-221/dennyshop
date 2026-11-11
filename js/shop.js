@@ -368,7 +368,7 @@ function cardHtml(p) {
         chipRow(p, "color", p.colors || []) +
         '<p class="pc_hint" role="status"></p>' +
         '<div class="pc_actions">' +
-        '<button type="button" class="pc_add js-cart"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Add to cart</button>' +
+        '<button type="button" class="pc_add js-cart" aria-label="Add to cart"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Add</button>' +
         '<button type="button" class="pc_buy js-buy">Buy Now</button>' +
         "</div></div></div></div>";
 }

@@ -186,7 +186,8 @@
    only, not the whole card. */
 .product_section .box {
     height: 100%;
-    padding: 18px;
+    padding: 12px;
+    border-width: 6px;
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
@@ -257,8 +258,8 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    gap: 10px;
-    min-height: 46px;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
 .pc_head h5 {
@@ -274,19 +275,19 @@
 }
 
 .pc_group {
-    margin-top: 10px;
-    /* two chip rows reserved so every card ends the same height */
-    min-height: 105px;
+    margin-top: 5px;
+    /* one chip row reserved so every card ends the same height */
+    min-height: 46px;
 }
 
 .pc_label {
     display: block;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: .4px;
+    letter-spacing: .3px;
     text-transform: uppercase;
     color: #002c3e;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .pc_group.missing .pc_label {
@@ -300,15 +301,15 @@
 .pc_chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
 }
 
 .pc_chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    min-height: 38px;
-    padding: 6px 14px;
+    gap: 5px;
+    min-height: 30px;
+    padding: 3px 11px;
     border: 1px solid #ccc;
     border-radius: 20px;
     background: #fff;
@@ -334,8 +335,8 @@
 }
 
 .sw_dot {
-    width: 16px;
-    height: 16px;
+    width: 13px;
+    height: 13px;
     flex: 0 0 auto;
     border-radius: 50%;
     border: 1px solid rgba(0, 0, 0, .28);
@@ -359,17 +360,18 @@
 
 .pc_actions {
     display: flex;
-    gap: 8px;
-    margin-top: 12px;
+    gap: 6px;
+    margin-top: 8px;
 }
 
 .pc_actions button {
     flex: 1 1 0;
     min-width: 0;
-    border-radius: 30px;
-    padding: 10px 8px;
-    font-size: 13px;
+    border-radius: 999px;
+    padding: 8px 6px;
+    font-size: 12px;
     font-weight: 700;
+    white-space: nowrap;
     cursor: pointer;
     transition: all .3s;
 }
@@ -664,16 +666,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 7px;
     width: 100%;
     border: 1px solid #f7444e;
     background: #f7444e;
     color: #fff;
-    border-radius: 30px;
-    padding: 12px 18px;
-    font-size: 15px;
+    border-radius: 999px;
+    padding: 9px 15px;
+    font-size: 13px;
     font-weight: 700;
     text-transform: uppercase;
+    white-space: nowrap;
     cursor: pointer;
     transition: all .3s;
 }
@@ -1015,7 +1018,7 @@
     padding: 10px 0 4px;
 }
 
-.result_box i {
+.result_box > i {
     font-size: 46px;
     color: #f7444e;
     display: block;
