@@ -1022,3 +1022,14 @@ footer .information_f a:hover {
     text-transform: uppercase;
     letter-spacing: .3px;
 }
+
+/* ---------- promise cards: icon inside the round frame ---------- */
+.client_section .img_container .img-box .img_box-inner {
+    background: #f7f8f9;
+    border: 1px solid #e6e6e6;
+}
+
+.client_section .img_container .img-box .img_box-inner .fa {
+    font-size: 54px;
+    color: #f7444e;
+}
