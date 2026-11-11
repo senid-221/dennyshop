@@ -1152,42 +1152,6 @@ function loadRemoteShop() {
         });
 }
 
-/* ---------------- floating buttons corner guard ----------------
-   The cards keep their full width. When a card's Add/Buy row reaches the
-   bottom-right corner where the floating buttons live, the buttons fade out
-   so they can never swallow a tap. */
-function fabGuard() {
-    var stack = document.querySelector(".shop-fabs");
-    if (!stack) return;
-    var ticking = false;
-
-    function check() {
-        ticking = false;
-        var vh = window.innerHeight;
-        /* the real footprint of the floating buttons, not a guessed box */
-        var zone = stack.getBoundingClientRect();
-        if (!zone.width) return;
-        var blocked = false;
-        /* only tap targets need clearing; the photo and plain text may pass under */
-        all(".pc_chips, .pc_actions, #drawer_checkout, #ck_submit").forEach(function (node) {
-            var r = node.getBoundingClientRect();
-            if (r.bottom < 0 || r.top > vh) return;
-            if (r.right > zone.left && r.left < zone.right && r.bottom > zone.top && r.top < zone.bottom) blocked = true;
-        });
-        stack.classList.toggle("corner-block", blocked);
-    }
-
-    function schedule() {
-        if (ticking) return;
-        ticking = true;
-        requestAnimationFrame(check);
-    }
-
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    check();
-}
-
 /* ---------------- boot ---------------- */
 document.addEventListener("DOMContentLoaded", function () {
     captureRef();
@@ -1210,7 +1174,6 @@ document.addEventListener("DOMContentLoaded", function () {
         paintReels();
         paintReelTeaser();
         mountPageCheckout();
-        fabGuard();
         if (API_ON) captureRef();
         wireSubscribe();
         wireContactForm();
