@@ -1,0 +1,24 @@
+{
+  "name": "dennyshop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Denny Shop storefront, dashboard and API",
+  "scripts": {
+    "start": "node server/index.js",
+    "migrate": "node server/migrate.js",
+    "seed": "node server/seed.js",
+    "owner": "node server/make-owner.js",
+    "setup": "node server/migrate.js && node server/make-owner.js",
+    "test": "node --test server/test/api.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.12.0"
+  },
+  "devDependencies": {
+    "pg-mem": "^3.0.3",
+    "supertest": "^7.0.0"
+  }
+}
