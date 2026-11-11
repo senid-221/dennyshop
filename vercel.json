@@ -1,18 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/index.js": {
-      "memory": 1024,
-      "maxDuration": 15,
-      "includeFiles": "server/**"
-    },
-    "api/[...path].js": {
-      "memory": 1024,
-      "maxDuration": 15,
-      "includeFiles": "server/**"
-    }
-  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
     {
       "source": "/buy",
       "destination": "/buy.html"
@@ -98,5 +90,18 @@
         }
       ]
     }
-  ]
+  ],
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "memory": 1024,
+      "maxDuration": 15,
+      "includeFiles": "server/**"
+    }
+  }
 }
