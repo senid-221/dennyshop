@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>Buy - Denny Shop</title>
+  <link rel="shortcut icon" href="images/favicon.png">
+  <link rel="stylesheet" href="css/bootstrap.css">
+  <link href="css/style.css" rel="stylesheet">
+  <script>
+    /* carry the picked variant to the checkout page, no server needed */
+    var q = location.search || "";
+    location.replace("/checkout" + (q.charAt(0) === "?" ? q : ""));
+  </script>
+</head>
+<body class="sub_page">
+  <section class="inner_page_head">
+    <div class="container_fuild">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="full"><h3>Taking you to checkout</h3></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="why_section layout_padding">
+    <div class="container">
+      <p class="shop-note" style="text-align:center;">If nothing happens,
+        <a href="/checkout">open the checkout page</a> or
+        <a href="/product">go back to the shop</a>.</p>
+    </div>
+  </section>
+</body>
+</html>
